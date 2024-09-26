@@ -3,7 +3,7 @@
 //Emails: tahi9525@mylaurier.ca, hami5217@mylaurier.ca, pere
 //Date: 2024-09-26
 //------------------------------------------------------------------------------------------
-//Question 2a:
+//Question 2b:
 //Suppose we have n programs p1,...,pn to be executed. The programs are described in an input text file. 
 //(b) Now suppose each program pi depends on all the programs p1,...,pi−1. This means the programs
 //should be executed sequentially, first completing p1, then p2 and so on. Modify the parallel
@@ -14,18 +14,20 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <string.h>
+
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
         exit(1);
     }
+
     // Open input file
     FILE *input_file = fopen(argv[1], "r");
     if (input_file == NULL) {
         perror("Error opening file");
         exit(1);
     }
+
     // Read number of programs
     int n;
     if (fscanf(input_file, "%d", &n) != 1) {
@@ -33,6 +35,7 @@ int main(int argc, char *argv[]) {
         fclose(input_file);
         exit(1);
     }
+
     // Dynamically allocate memory for program paths
     char **paths = malloc(n * sizeof(char *));
     if (paths == NULL) {
@@ -40,18 +43,20 @@ int main(int argc, char *argv[]) {
         fclose(input_file);
         exit(1);
     }
+
     // Read program paths
     for (int i = 0; i < n; i++) {
-        paths[i] = malloc(256 * sizeof(char)); // Allocating memory for each path
+        paths[i] = malloc(256 * sizeof(char)); // Allocate memory for each path
         if (paths[i] == NULL || fscanf(input_file, "%255s", paths[i]) != 1) {
             fprintf(stderr, "Error reading program path\n");
             fclose(input_file);
-            for (int j = 0; j <= i; j++) free(paths[j]); // Free previously allocated memory
-                free(paths);
+            for (int j = 0; j <= i; j++) free(paths[j]); // Free allocated memory
+            free(paths);
             exit(1);
         }
     }
     fclose(input_file);
+
     // Execute programs sequentially
     for (int i = 0; i < n; i++) {
         pid_t pid = fork();
@@ -60,7 +65,7 @@ int main(int argc, char *argv[]) {
             perror("Fork failed");
             exit(1);
         } else if (pid == 0) {
-            // Child process: Execute program
+            // Child process: Execute the program
             char *args[] = {paths[i], NULL};
             execvp(args[0], args);
             // If execvp fails
@@ -71,11 +76,13 @@ int main(int argc, char *argv[]) {
             wait(NULL);
         }
     }
+
     // Free allocated memory
     for (int i = 0; i < n; i++) {
         free(paths[i]);
     }
     free(paths);
+
     printf("All programs executed sequentially.\n");
     return 0;
 }

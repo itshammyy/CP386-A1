@@ -15,18 +15,20 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <string.h>
+
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
         exit(1);
     }
+
     // Open input file
     FILE *input_file = fopen(argv[1], "r");
     if (input_file == NULL) {
         perror("Error opening file");
         exit(1);
     }
+
     // Read number of programs
     int n;
     if (fscanf(input_file, "%d", &n) != 1) {
@@ -34,6 +36,7 @@ int main(int argc, char *argv[]) {
         fclose(input_file);
         exit(1);
     }
+
     // Dynamically allocate memory for program paths
     char **paths = malloc(n * sizeof(char *));
     if (paths == NULL) {
@@ -41,19 +44,21 @@ int main(int argc, char *argv[]) {
         fclose(input_file);
         exit(1);
     }
+
     // Read program paths
     for (int i = 0; i < n; i++) {
-        paths[i] = malloc(256 * sizeof(char)); // Allocating memory for each path
+        paths[i] = malloc(256 * sizeof(char)); // Allocate memory for each path
         if (paths[i] == NULL || fscanf(input_file, "%255s", paths[i]) != 1) {
             fprintf(stderr, "Error reading program path\n");
             fclose(input_file);
-            for (int j = 0; j <= i; j++) free(paths[j]); // Free previously allocated memory
+            for (int j = 0; j <= i; j++) free(paths[j]); // Free allocated memory
             free(paths);
             exit(1);
         }
     }
     fclose(input_file);
-    // Fork child processes for each program to run in parallel
+
+    // Fork child processes to run programs in parallel
     for (int i = 0; i < n; i++) {
         pid_t pid = fork();
         if (pid < 0) {
@@ -69,15 +74,18 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
     }
+
     // Parent process: Wait for all children to finish
     for (int i = 0; i < n; i++) {
         wait(NULL);
     }
+
     // Free allocated memory
     for (int i = 0; i < n; i++) {
-        (paths[i]);
+        free(paths[i]);
     }
     free(paths);
+
     printf("All programs executed in parallel.\n");
     return 0;
 }
